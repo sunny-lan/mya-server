@@ -14,7 +14,7 @@ module.exports = function makeApp(pubsub, store) {
     app.use(express.static('public'));
 
     const makeClient = makeCommandHandler(pubsub, store);
-    app.ws('/live', (ws, req) => {
+    app.ws('/ws', (ws, req) => {
         handleWebsocket(ws, makeClient);
     });
 

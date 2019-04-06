@@ -14,12 +14,12 @@ module.exports = function handleWebsocket(ws, makeClient, timeout = 1000) {
     let isAlive = true;
 
     function ping() {
-        if (!isAlive) dispose();
+        if (!isAlive) return dispose();
         try {
             ws.ping();
             isAlive = false;
         }catch (e) {
-            dispose();
+            return dispose();
         }
     }
 

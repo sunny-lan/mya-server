@@ -2,7 +2,7 @@ const BSON = require('bson');
 
 const WebSocket = require('ws');
 
-const ws = new WebSocket('ws://localhost:1234/live');
+const ws = new WebSocket(process.argv[2]||'ws://localhost:1234/ws');
 
 ws.on('open', function open() {
     console.log('-- ok --');
@@ -36,14 +36,14 @@ lineReader.on('line', function (line) {
         ws.send(BSON.serialize({
             command: 'SEND',
             device: line[1],
-            data: line[2],
+            data: eval(line.slice(2).join(' ')),
         }));
     }
     if (line[0] === 'p') {
         ws.send(BSON.serialize({
             command: 'PUSH',
             device: line[1],
-            data: line[2],
+            data: eval(line.slice(2).join(' ')),
         }));
     }
 
