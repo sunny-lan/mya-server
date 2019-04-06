@@ -1,0 +1,20 @@
+<html lang="">
+<head>
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+    <title></title>
+</head>
+<body>
+<script>
+    var client = mqtt.connect();
+
+    client.subscribe("#");
+
+    client.on("message", function(topic, payload) {
+        alert([topic, payload].join(": "));
+        client.end();
+    });
+
+    client.publish("mqtt/demo", "hello world!");
+</script>
+</body>
+</html>

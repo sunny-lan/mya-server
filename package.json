@@ -2,16 +2,25 @@
   "name": "mya-server",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "src/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node src/index"
   },
   "author": "Sunny",
   "license": "ISC",
+  "repository": "https://github.com/sunny-lan/mya-server",
   "dependencies": {
+    "bson": "^4.0.2",
+    "ejs": "^2.6.1",
     "express": "^4.16.4",
-    "ioredis": "^4.9.0",
-    "mosca": "^2.8.3",
-    "mqtt": "^2.18.8"
+    "express-ws": "^4.0.0",
+    "ow": "^0.12.0"
+  },
+  "engines": {
+    "node": "10.x"
+  },
+  "devDependencies": {
+    "ws": "^6.2.1"
   }
 }
