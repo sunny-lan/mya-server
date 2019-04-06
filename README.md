@@ -1,8 +1,8 @@
-#Realtime communication
+#Realtime communication#
 
 Realtime communication is achieved using MQTT and Websockets.
 
-###Device to client (browser)
+###Device to client (browser)###
 
 A device can send message to server at any time using `push [device] [data]`
 command. The server stores last 100 data from each device.
@@ -17,7 +17,7 @@ The client (eg. browser) can get data from device in two ways:
 The server sends a `pushed [device] [data]` message to the client when
 new data is available from device
 
-###Examples
+###Examples###
 
 **get**
 ```
@@ -36,7 +36,7 @@ server to client: pushed garage_door {open:false}
 Note that `[device]` represents the ID of the device. It should be kept private,
 as anyone with the device ID will be able to control it.
 
-###Client to device
+###Client to device###
 
 The client can send a message to control a device 
 using the `send [device] [data]` command. Once this is sent,
