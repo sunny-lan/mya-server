@@ -1,14 +1,16 @@
-const BSON = require('bson');
 
 module.exports = function handleWebsocket(ws, makeClient, timeout = 1000) {
     console.log('ws connected');
 
-    const client = makeClient(data => {
-        ws.send(BSON.serialize(data));
-    });
+    const client = makeClient(data =>ws.send(data));
 
     ws.on('message', message => {
-        client.handleMessage(BSON.deserialize(message));
+        try {
+            client.handleMessage(message);
+        }catch (error) {
+            console.error('client did not respect protocol', error);
+            dispose();
+        }
     });
 
     let isAlive = true;

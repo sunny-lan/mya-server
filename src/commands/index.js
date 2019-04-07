@@ -1,4 +1,4 @@
-const ow=require('ow');
+const ow = require('ow');
 
 const makeSubscribePush = require('./subscribePush');
 const makeSubscribeSend = require('./subscribeSend');
@@ -7,63 +7,73 @@ const makeSend = require('./send');
 const makeGet = require('./get');
 
 module.exports = function makeCommandHandler(pubsub, store) {
-    function makeClient(listener) {
-        const subscribed = {};
-        let disposed = false;
+    //initialize commands
+    const commands = {};
 
-        //wrap pubsub so that it we can dispose listeners on disconnect
-        const wrappedPubSub = {
-            on(event, listener) {
-                if (subscribed[event]) return;
-                subscribed[event] = true;
-                pubsub.on(event, listener);
-            },
-            emit(event, data) {
-                pubsub.emit(event, data);
+    function addCommand(commandModule) {
+        commands[commandModule.command] = commandModule;
+    }
+
+    addCommand(makeSubscribePush(pubsub));
+    addCommand(makeSubscribeSend(pubsub));
+    addCommand(makePush(pubsub, store));
+    addCommand(makeSend(pubsub));
+    addCommand(makeGet(pubsub, store));
+
+    return function makeClient(listener) {
+        function wrappedListener(data) {
+            try {
+                listener(data);
+            } catch (error) {
+                console.error('Error in listener');
+                console.error(error);
+                console.error(listener.toString());
+                //TODO dispose listener
             }
-        };
+        }
+
+        let disposed = false;
 
         function dispose() {
             if (disposed)
                 throw new Error('This handler has already been disposed');
 
             disposed = true;
-            Object.keys(subscribed)
-                .forEach(event => pubsub.removeListener(event, listener));
+            Object.keys(commands)
+                .forEach(commandName => commands[commandName].dispose(wrappedListener))
         }
-
-        const commands = {};
-
-        function addCommand(commandModule) {
-            commands[commandModule.command] = commandModule;
-        }
-
-        addCommand(makeSubscribePush(wrappedPubSub));
-        addCommand(makeSubscribeSend(wrappedPubSub));
-        addCommand(makePush(wrappedPubSub, store));
-        addCommand(makeSend(wrappedPubSub));
-        addCommand(makeGet(wrappedPubSub, store));
-
 
         function handleMessage(message) {
             if (disposed)
                 throw new Error('This handler has already been disposed');
 
+            // console.log(message);
+
+            //look for command in list of commands
             const commandModule = commands[message.command];
+
+            //check if it actually exists
             if (commandModule) {
+                //remove the command name from the params
                 delete message.command;
+
+                //validate params
                 ow(message, commandModule.paramType);
-                commandModule.run(message, listener);
+
+                //run the command
+                commandModule.run(message, wrappedListener);
             } else {
                 throw new Error(`Command ${message.command} does not exist`);
             }
         }
 
+        //wraps the command handler with error catch
         function handleMessageError(message) {
             try {
                 handleMessage(message);
             } catch (error) {
-                listener({
+                console.error(error);
+                wrappedListener({
                     command: 'ERROR',
                     error: error.message,
                 });
@@ -75,6 +85,4 @@ module.exports = function makeCommandHandler(pubsub, store) {
             dispose,
         }
     }
-
-    return makeClient;
 };

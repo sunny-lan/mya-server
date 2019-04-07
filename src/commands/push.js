@@ -14,5 +14,6 @@ module.exports = function (pubsub, store) {
             history: ow.optional.number,
         }),
         run,
+        dispose(){},
     };
 };

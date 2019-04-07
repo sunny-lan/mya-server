@@ -12,5 +12,6 @@ module.exports = function (pubsub) {
             data: () => true,
         }),
         run,
+        dispose(){},
     };
 };

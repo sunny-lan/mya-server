@@ -3,8 +3,9 @@ const path = require('path');
 const expressWs = require('express-ws');
 const makeCommandHandler = require('./commands');
 const handleWebsocket = require('./connection/websocket');
+const wrapJSON = require('./connection/json');
 
-module.exports = function makeApp(pubsub, store) {
+module.exports = function makeAppInstance(pubsub, store) {
     const app = express();
     expressWs(app);
 
@@ -15,7 +16,7 @@ module.exports = function makeApp(pubsub, store) {
 
     const makeClient = makeCommandHandler(pubsub, store);
     app.ws('/ws', (ws, req) => {
-        handleWebsocket(ws, makeClient);
+        handleWebsocket(ws, wrapJSON(makeClient));
     });
 
     return app;

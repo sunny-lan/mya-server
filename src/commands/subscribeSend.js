@@ -1,11 +1,18 @@
 const ow = require('ow');
 
 module.exports = function (pubsub) {
+    const disposer = new WeakMap();
+
     function run({device}, listener) {
-        pubsub.on(`${device}/send`, data => listener({
-            command: 'SENT',
-            device, data,
-        }));
+        function handler(data) {
+            listener({
+                command: 'SENT',
+                device, data,
+            });
+        }
+
+        pubsub.on(`${device}/send`, handler);
+        disposer.set(listener, () => pubsub.removeListener(`${device}/send`, handler));
     }
 
     return {
@@ -14,5 +21,9 @@ module.exports = function (pubsub) {
             device: ow.string,
         }),
         run,
+        dispose(listener) {
+            if (disposer.has(listener))
+                disposer.get(listener)();
+        },
     };
 };

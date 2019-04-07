@@ -1,7 +1,7 @@
 const ow=require('ow');
 
 module.exports = function (pubsub, store) {
-    function run({device, start = 0, stop = 1} ) {
+    function run({device, start = 0, stop = 1}, listener) {
         store.lrange(device, start, stop).map((data, index) => listener({
             command: 'PUSHED',
             time: index + start,
@@ -17,5 +17,6 @@ module.exports = function (pubsub, store) {
             stop: ow.optional.number,
         }),
         run,
+        dispose(){},
     };
 };
