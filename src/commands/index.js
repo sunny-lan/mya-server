@@ -5,6 +5,7 @@ const makeSubscribeSend = require('./subscribeSend');
 const makePush = require('./push');
 const makeSend = require('./send');
 const makeGet = require('./get');
+const makeDebug=require('./debug');
 
 module.exports = function makeCommandHandler(pubsub, store) {
     //initialize commands
@@ -19,6 +20,7 @@ module.exports = function makeCommandHandler(pubsub, store) {
     addCommand(makePush(pubsub, store));
     addCommand(makeSend(pubsub));
     addCommand(makeGet(pubsub, store));
+    addCommand(makeDebug(pubsub));
 
     return function makeClient(listener) {
         function wrappedListener(data) {
@@ -47,10 +49,10 @@ module.exports = function makeCommandHandler(pubsub, store) {
             if (disposed)
                 throw new Error('This handler has already been disposed');
 
-            // console.log(message);
-
             //look for command in list of commands
             const commandModule = commands[message.command];
+
+            pubsub.emit('message', message);
 
             //check if it actually exists
             if (commandModule) {

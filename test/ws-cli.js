@@ -38,7 +38,7 @@ lineReader.on('line', function (line) {
             data
         }));
     } else if (line[0] === 'p') {
-        eval(`const data=${line.slice(2).join(' ')}`);
+        eval(`var data=${line.slice(2).join(' ')}`);
         ws.send(JSON.stringify({
             command: 'PUSH',
             device: line[1],
@@ -50,6 +50,11 @@ lineReader.on('line', function (line) {
             device: line[1],
             start: parseInt(line[2]),
             stop: parseInt(line[3]),
+        }));
+    } else if (line[0] === 'd') {
+        console.log('debug begin');
+        ws.send(JSON.stringify({
+            command: 'DEBUG',
         }));
     } else {
         console.error('not a command')
