@@ -1,4 +1,5 @@
 module.exports = function makeDeviceTemplate(mya) {
+    //TODO prevent multiple apps from trying to setup the same device
     return class DeviceTemplate {
         constructor(initDevice) {
             this.listenerHooks = [];

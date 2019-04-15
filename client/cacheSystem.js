@@ -59,8 +59,6 @@ module.exports = function makeCacheSystem(messageChannel, mya) {
             listeners[device].splice(callback, 1);
         },
         onOpen(callback) {
-            if (open) //TODO not sure if this is what we really want
-                callback();
             messageChannel.on('open', callback);
         },
         onClose(callback) {
