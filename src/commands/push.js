@@ -4,6 +4,7 @@ module.exports = function (pubsub, store) {
     function run({device, data, history = 10}) {
         store.lpush(device, data, history);
         pubsub.emit(`${device}/push`, data);
+        //TODO data should contain time:0 for publish
     }
 
     return {

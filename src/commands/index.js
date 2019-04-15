@@ -7,6 +7,12 @@ const makeSend = require('./send');
 const makeGet = require('./get');
 const makeDebug=require('./debug');
 
+/**
+ * Handles mya commands
+ * @param pubsub the message broker for the app
+ * @param store the store for the app
+ * @returns {function(*): {handleMessage, dispose}}
+ */
 module.exports = function makeCommandHandler(pubsub, store) {
     //initialize commands
     const commands = {};
@@ -22,6 +28,7 @@ module.exports = function makeCommandHandler(pubsub, store) {
     addCommand(makeGet(pubsub, store));
     addCommand(makeDebug(pubsub));
 
+    //TODO replace listener interface with channel interface (like in browser api)
     return function makeClient(listener) {
         function wrappedListener(data) {
             try {
