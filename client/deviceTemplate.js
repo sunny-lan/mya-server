@@ -1,5 +1,6 @@
 module.exports = function makeDeviceTemplate(mya) {
     //TODO prevent multiple apps from trying to setup the same device
+    //TODO allow setup only when device is responsive
     return class DeviceTemplate {
         constructor(initDevice) {
             this.listenerHooks = [];

@@ -1,17 +1,10 @@
+const EventEmitter = require('events');
 
-module.exports = function handleWebsocket(ws, makeClient, timeout = 1000) {
+module.exports = function makeWebsocketClient(ws, timeout = 1000) {
     console.log('ws connected');
+    const emitter = new EventEmitter();
 
-    const client = makeClient(data =>ws.send(data));
-
-    ws.on('message', message => {
-        try {
-            client.handleMessage(message);
-        }catch (error) {
-            console.error('client did not respect protocol', error);
-            dispose();
-        }
-    });
+    ws.on('message', message => emitter.emit('message', message));
 
     let isAlive = true;
 
@@ -20,7 +13,7 @@ module.exports = function handleWebsocket(ws, makeClient, timeout = 1000) {
         try {
             ws.ping();
             isAlive = false;
-        }catch (e) {
+        } catch (e) {
             return dispose();
         }
     }
@@ -32,7 +25,11 @@ module.exports = function handleWebsocket(ws, makeClient, timeout = 1000) {
     function dispose() {
         clearInterval(pingTimer);
         ws.terminate();
-        client.dispose();
+        emitter.emit('close');
         console.log('ws disconnected');
     }
+
+    emitter.send = ws.send.bind(ws);
+
+    return emitter;
 };

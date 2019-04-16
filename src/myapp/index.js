@@ -8,13 +8,15 @@ const uniqueFilename = require('unique-filename');
 const decompress = require('decompress');
 const uuid = require('uuid/v4');
 
+const {MyaError}=require('../error');
+
 const readFile = util.promisify(fs.readFile);
 
 async function readGuard(file, errMessage) {
     try {
         return await readFile(file);
     } catch (err) {
-        throw new Error(errMessage);
+        throw new MyaError(errMessage, 'FILE_READ_FAIL');
     }
 }
 
@@ -38,7 +40,7 @@ module.exports = function makeMyapp(store, fileStore, generateToken) {
 
             if (appID) {//if app already exists
                 if (!store.hexists('myapp:apps', appID))
-                    throw new Error(`App doesn't exist: ${appID}`);
+                    throw new MyaError(`App doesn't exist: ${appID}`, 'APP_NOT_FOUND');
             } else {//if app is new
                 appID = uuid();//generate new id for app
             }
@@ -59,7 +61,10 @@ module.exports = function makeMyapp(store, fileStore, generateToken) {
         },
 
         getInfo(appID) {
-            return store.hget('myapp:apps', appID);
+            const appInfo=store.hget('myapp:apps', appID);
+            if (!appInfo)//check if app exists
+                throw new MyaError(`App doesn't exist: ${appID}`);
+            return appInfo;
         },
 
         getInstanceAppID(instanceID) {
@@ -68,8 +73,6 @@ module.exports = function makeMyapp(store, fileStore, generateToken) {
 
         async createInstance(appID) {
             const appInfo = this.getInfo(appID);
-            if (!appInfo)//check if app exists
-                throw new Error(`App doesn't exist: ${appID}`);
 
             //create new private ID for this app
             const instanceID = await generateToken();

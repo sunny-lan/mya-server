@@ -1,11 +1,13 @@
 const ow = require('ow');
 
+const {MyaError, fail} = require('../error');
+
 const makeSubscribePush = require('./subscribePush');
 const makeSubscribeSend = require('./subscribeSend');
 const makePush = require('./push');
 const makeSend = require('./send');
 const makeGet = require('./get');
-const makeDebug=require('./debug');
+const makeDebug = require('./debug');
 
 /**
  * Handles mya commands
@@ -28,70 +30,77 @@ module.exports = function makeCommandHandler(pubsub, store) {
     addCommand(makeGet(pubsub, store));
     addCommand(makeDebug(pubsub));
 
-    //TODO replace listener interface with channel interface (like in browser api)
-    return function makeClient(listener) {
-        function wrappedListener(data) {
-            try {
-                listener(data);
-            } catch (error) {
-                console.error('Error in listener');
-                console.error(error);
-                console.error(listener.toString());
-                //TODO dispose listener
-            }
-        }
+    /**
+     * handles a client
+     * @param client the client to handle
+     * this must emit the 'message' event when the client sends a message.
+     * it must contain a send function which does not throw exceptions
+     * it must emit the 'close' event when the client disconnects
+     * the close event should only ever be emitted once
+     * after close is emitted, send will never be called, and no other events should be emitted
+     */
+    function handleClient(client) {
+        //TODO make this less intrusive
+        //replace client.send with anti-exception version
+        // const oldSend = client.send.bind(client);
+        // client.send = function sendGuarded(data) {
+        //     try {
+        //         console.log('send', data);
+        //         oldSend(data);
+        //     } catch (error) {
+        //         fail(new MyaError('client.send is not allowed to throw exceptions', 'DEADBEEF', error));
+        //     }
+        // };
 
-        let disposed = false;
+        //listen to when the client closes, to prevent messages from sending after
+        let closed = false;
+        client.once('close', () => closed = true);
 
-        function dispose() {
-            if (disposed)
-                throw new Error('This handler has already been disposed');
-
-            disposed = true;
-            Object.keys(commands)
-                .forEach(commandName => commands[commandName].dispose(wrappedListener))
-        }
-
+        /**
+         * Handles a message from the client
+         * @param message the message
+         * @throws COMMAND_NOT_FOUND when the command does not exist
+         * It can also throw errors when the command fails to run
+         */
         function handleMessage(message) {
-            if (disposed)
-                throw new Error('This handler has already been disposed');
+            if (closed)
+                fail(new MyaError('Client cannot send messages after being closed', 'DEADBEEF'));
 
-            //look for command in list of commands
-            const commandModule = commands[message.command];
-
+            //TODO for debugging purposes
             pubsub.emit('message', message);
 
-            //check if it actually exists
-            if (commandModule) {
-                //remove the command name from the params
-                delete message.command;
+            const commandName = message.command;
+            delete message.command;
 
-                //validate params
-                ow(message, commandModule.paramType);
+            //look for command in list of commands and check if exists
+            const commandModule = commands[commandName];
+            if (commandModule) {
+                //TODO move this into the command modules
+                //check params
+                try {
+                    ow(message, commandModule.paramType);
+                } catch (error) {
+                    throw new MyaError(`Invalid arguments passed to ${commandModule}`, 'INVALID_ARGUMENTS', error);
+                }
 
                 //run the command
-                commandModule.run(message, wrappedListener);
+                commandModule.run(client, message);
             } else {
-                throw new Error(`Command ${message.command} does not exist`);
+                throw new MyaError(`Command ${commandName} does not exist`, 'COMMAND_NOT_FOUND');
             }
         }
-
-        //wraps the command handler with error catch
-        function handleMessageError(message) {
+        client.on('message', function handleMessageError(message) {
+            //catch failed commands and send the error to the client
             try {
                 handleMessage(message);
             } catch (error) {
-                console.error(error);
-                wrappedListener({
+                client.send({
                     command: 'ERROR',
-                    error: error.message,
+                    error,
                 });
             }
-        }
-
-        return {
-            handleMessage: handleMessageError,
-            dispose,
-        }
+        });
     }
+
+    return handleClient;
 };

@@ -5,6 +5,8 @@ const express = require('express');
 const uniqueFilename = require('unique-filename');
 const formidable = require('formidable');
 
+const {MyaError}=require('../error');
+
 module.exports = function makeMyappEndpoint(myapp) {
     const endpoint = express.Router();
 
@@ -21,7 +23,7 @@ module.exports = function makeMyappEndpoint(myapp) {
         });
         form.on('end', () => {
             if (!uploaded)
-                throw new Error('Invalid upload');
+                throw new MyaError('Invalid upload', 'INVALID_UPLOAD');
         });
     });
 
