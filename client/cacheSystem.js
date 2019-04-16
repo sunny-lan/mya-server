@@ -15,6 +15,7 @@ module.exports = function makeCacheSystem(messageChannel, mya) {
         open = true;
     });
 
+    //TODO implement message history
     messageChannel.on('message', function handleMessage(message) {
         const {device, command, data} = message;
         if (command === 'PUSHED') {

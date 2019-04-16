@@ -1,0 +1,41 @@
+<script>
+    myapp((mya, state, ui) => {
+        const btn = ui.querySelector('.light-switch');
+
+        const lightDevice = new mya.ESP8266('test_device');
+        const ESP8266 = mya.ESP8266.CONSTANTS;
+        const LED_PIN = ESP8266.PIN.D5;
+
+        //make sure LED pin is in output mode
+        lightDevice.setup(() => {
+            lightDevice.pinMode(LED_PIN, ESP8266.PIN_MODE.OUTPUT);
+            btn.disabled = false;//allow user to click button
+        });
+
+        //disable button if disconnected
+        mya.onClose(() => {
+            btn.disabled = true;
+            btn.innerText = 'disconnected';
+        });
+
+        let lightIsOn = false;
+
+        //detect when light actually turns on and off
+        lightDevice.listen(() => {
+            lightIsOn = lightDevice.digitalRead(LED_PIN) === ESP8266.VALUE.HIGH;
+            if (lightIsOn)
+                btn.innerText = 'turn light off';
+            else
+                btn.innerText = 'turn light on';
+        });
+
+        //handles when button clicks
+        btn.onclick = () => {
+            if (lightIsOn) // if light is on, turn it off
+                lightDevice.digitalWrite(LED_PIN, ESP8266.VALUE.LOW);
+            else // vice versa
+                lightDevice.digitalWrite(LED_PIN, ESP8266.VALUE.HIGH);
+        };
+    });
+</script>
+<button class="light-switch" disabled>loading</button>
