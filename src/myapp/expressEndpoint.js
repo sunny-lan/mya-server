@@ -5,12 +5,13 @@ const express = require('express');
 const uniqueFilename = require('unique-filename');
 const formidable = require('formidable');
 
-const {MyaError}=require('../error');
+const {MyaError} = require('../error');
+const {asyncMiddleware}=require('../util');
 
 module.exports = function makeMyappEndpoint(myapp) {
     const endpoint = express.Router();
 
-    endpoint.post('/createApp', (req, res) => {
+    endpoint.post('/createApp', (req, res, next) => {
         const form = new formidable.IncomingForm();
         form.parse(req);
         let uploaded = false;
@@ -19,21 +20,21 @@ module.exports = function makeMyappEndpoint(myapp) {
             myapp.createApp(file.path, req.body.appID).then(appID => {
                 //once app is done creating, send response
                 res.send(appID);
-            });
+            }).catch(next);
         });
         form.on('end', () => {
             if (!uploaded)
-                throw new MyaError('Invalid upload', 'INVALID_UPLOAD');
+                next(new MyaError('Invalid upload', 'INVALID_UPLOAD'));
         });
     });
 
-    endpoint.post('/createInstance', async (req, res) => {
+    endpoint.post('/createInstance', asyncMiddleware(async (req, res) => {
         const instanceID = await myapp.createInstance(req.body.appID);
         res.send(instanceID);
-    });
+    }));
 
     //TODO change html appID to instanceID
-    endpoint.post('/test', async (req, res) => {
+    endpoint.post('/test', asyncMiddleware(async (req, res) => {
         const instanceID = req.body.instanceID;
         const ui = await myapp.getUI(instanceID);
         res.send(`
@@ -49,7 +50,7 @@ module.exports = function makeMyappEndpoint(myapp) {
         </body>
         </html>
         `);
-    });
+    }));
 
     return endpoint;
 };

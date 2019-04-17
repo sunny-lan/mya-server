@@ -42,15 +42,15 @@ module.exports = function makeCommandHandler(pubsub, store) {
     function handleClient(client) {
         //TODO make this less intrusive
         //replace client.send with anti-exception version
-        // const oldSend = client.send.bind(client);
-        // client.send = function sendGuarded(data) {
-        //     try {
-        //         console.log('send', data);
-        //         oldSend(data);
-        //     } catch (error) {
-        //         fail(new MyaError('client.send is not allowed to throw exceptions', 'DEADBEEF', error));
-        //     }
-        // };
+        const oldSend = client.send.bind(client);
+        client.send = function sendGuarded(data) {
+            try {
+                console.log('send', data);
+                oldSend(data);
+            } catch (error) {
+                fail(new MyaError('client.send is not allowed to throw exceptions', 'DEADBEEF', error));
+            }
+        };
 
         //listen to when the client closes, to prevent messages from sending after
         let closed = false;
@@ -64,7 +64,7 @@ module.exports = function makeCommandHandler(pubsub, store) {
          */
         function handleMessage(message) {
             if (closed)
-                fail(new MyaError('Client cannot send messages after being closed', 'DEADBEEF'));
+                fail(new Error('Client cannot send messages after being closed'));
 
             //TODO for debugging purposes
             pubsub.emit('message', message);

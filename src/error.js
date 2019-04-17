@@ -5,7 +5,7 @@ module.exports.MyaError = class MyaError extends Error {
         super(message);
 
         // Saving class name in the property of our custom error as a shortcut.
-        this.name = this.constructor.name;
+        this.name = 'MyaError';
 
         // Capturing stack trace, excluding constructor call from it.
         Error.captureStackTrace(this, this.constructor);
@@ -22,6 +22,15 @@ module.exports.MyaError = class MyaError extends Error {
     }
 };
 
+module.exports.isFatal=function isFatal(error){
+    return error.name === 'MyaError' || error.myaCode === 'DEADBEEF';
+};
+
+/**
+ * Used to handle fatal errors and implementation errors
+ * Logs the error and then kills the program
+ * @param error the error
+ */
 module.exports.fail = function fail(error) {
     console.error(error);
     process.exit(-1);

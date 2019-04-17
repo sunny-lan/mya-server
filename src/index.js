@@ -2,9 +2,10 @@ const app = require('./app');
 const makePubsub = require('./pubsub/eventemitter');
 const makeStore = require('./store/memory');
 const makeFileStore = require('./fileStore/fromStore');
+const {fail} = require("./error");
 
 const port = process.env.PORT;
-if(!port){
+if (!port) {
     throw new Error('No port specified');
 }
 
@@ -18,3 +19,12 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 appInstance.listen(port, () => console.log(`Listening on port ${port}`));
+
+process.on('uncaughtException', (err) => {
+    fail(err);
+});
+
+process.on('unhandledRejection', (reason, p) => {
+    console.log('Unhandled Rejection at:', p, 'reason:', reason);
+    fail(p);
+});
