@@ -1,3 +1,8 @@
+//TODO dependency inject this whole file
+
+const Sentry = require('@sentry/node');
+Sentry.init({dsn: process.env.SENTRY_DSN});
+
 module.exports.MyaError = class MyaError extends Error {
     constructor(message, myaCode, cause) {
 
@@ -22,7 +27,7 @@ module.exports.MyaError = class MyaError extends Error {
     }
 };
 
-module.exports.isFatal=function isFatal(error){
+module.exports.isFatal = function isFatal(error) {
     return error.name === 'MyaError' || error.myaCode === 'DEADBEEF';
 };
 
@@ -33,5 +38,7 @@ module.exports.isFatal=function isFatal(error){
  */
 module.exports.fail = function fail(error) {
     console.error(error);
-    process.exit(-1);
+    Sentry.captureException(error);
+    console.error('killing in 1000ms...');
+    setTimeout(()=>process.exit(-1), 1000);
 };
