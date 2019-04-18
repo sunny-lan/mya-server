@@ -1,7 +1,7 @@
 const app = require('./app');
 const makePubsub = require('./pubsub/eventemitter');
 const makeStore = require('./store/memory');
-const makeFileStore = require('./fileStore/fromStore');
+const makeLocalFileStore = require('./fileStore/local');
 const {fail} = require("./error");
 
 const port = process.env.PORT;
@@ -10,7 +10,7 @@ if (!port) {
 }
 
 const store = makeStore();
-const fileStore = makeFileStore(store);
+const fileStore = makeLocalFileStore();
 const appInstance = app(makePubsub(), store, fileStore);
 
 if (process.env.NODE_ENV !== 'production') {

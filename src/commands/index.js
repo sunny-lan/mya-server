@@ -30,6 +30,7 @@ module.exports = function makeCommandHandler(pubsub, store) {
     addCommand(makeGet(pubsub, store));
     addCommand(makeDebug(pubsub));
 
+    //TODO make client a stream
     /**
      * handles a client
      * @param client the client to handle

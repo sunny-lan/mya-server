@@ -8,11 +8,11 @@ module.exports = function makeFileStore(store, key = 'fileStore') {
         writeFile(path, data) {
             store.hset(key, path, data);
         },
-        deleteFile(path){
+        deleteFile(path) {
             store.hdel(key, path);
         },
-        async readFile(path) {
-            return await store.hget(key, path);
+        readFile(path) {
+            return store.hget(key, path);
         }
     };
 };

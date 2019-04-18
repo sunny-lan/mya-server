@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Register</title>
+</head>
+<body>
+<% if(err){ %>
+<%= err.message %>
+<% } %>
+<form action="/user/create" method="post">
+    <label>
+        Username:<input name="username">
+    </label>
+    <label>
+        Password:<input name="password">
+    </label>
+    <input type="submit" value="Register">
+</form>
+</body>
+</html>

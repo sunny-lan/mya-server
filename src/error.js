@@ -1,5 +1,5 @@
 //TODO dependency inject this whole file
-
+//TODO use VError module
 const Sentry = require('@sentry/node');
 Sentry.init({dsn: process.env.SENTRY_DSN});
 
@@ -28,7 +28,7 @@ module.exports.MyaError = class MyaError extends Error {
 };
 
 module.exports.isFatal = function isFatal(error) {
-    return error.name === 'MyaError' || error.myaCode === 'DEADBEEF';
+    return error.name !== 'MyaError' || error.myaCode === 'DEADBEEF';
 };
 
 /**

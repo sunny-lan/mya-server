@@ -1,5 +1,6 @@
 const EventEmitter = require('event-emitter');
 
+//TODO use stream
 module.exports = function makeWsMessageChannel(address, reconnect = 5000) {
     const channel = EventEmitter();
 

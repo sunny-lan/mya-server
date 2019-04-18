@@ -8,7 +8,7 @@ const uniqueFilename = require('unique-filename');
 const decompress = require('decompress');
 const uuid = require('uuid/v4');
 
-const {MyaError}=require('../error');
+const {MyaError} = require('../error');
 
 const readFile = util.promisify(fs.readFile);
 
@@ -61,14 +61,10 @@ module.exports = function makeMyapp(store, fileStore, generateToken) {
         },
 
         getInfo(appID) {
-            const appInfo=store.hget('myapp:apps', appID);
+            const appInfo = store.hget('myapp:apps', appID);
             if (!appInfo)//check if app exists
                 throw new MyaError(`App doesn't exist: ${appID}`);
             return appInfo;
-        },
-
-        getInstanceAppID(instanceID) {
-            return store.hget('myapp:instanceApp', instanceID);
         },
 
         async createInstance(appID) {
@@ -82,6 +78,10 @@ module.exports = function makeMyapp(store, fileStore, generateToken) {
             return instanceID;
         },
 
+        getInstanceAppID(instanceID) {
+            return store.hget('myapp:instanceApp', instanceID);
+        },
+
         async getUI(instanceID) {
             const appID = this.getInstanceAppID(instanceID);
 
@@ -91,7 +91,12 @@ module.exports = function makeMyapp(store, fileStore, generateToken) {
             //get app info so we can get the file
             const appInfo = this.getInfo(appID);
 
-            return await fileStore.readFile(`${appID}/${appInfo.ui}`);
+            //get actual html
+            let ui = await fileStore.readFile(`${appID}/${appInfo.ui}`);
+
+            //perform some transformations on html
+            ui = ui.toString().replace('<%=id>', instanceID);
+            return `<div appID="${instanceID}">${ui} </div>`
         },
     };
 };
